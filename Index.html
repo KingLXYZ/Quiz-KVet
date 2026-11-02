@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quiz de Medicina Veterinária</title>
+<style>
+:root{
+  --bg:#f2f7f5;--fg:#172b27;--card:#ffffff;--muted:#64756f;
+  --accent:#087f68;--accent-fg:#ffffff;--accent-soft:#e2f3ed;
+  --ok:#168653;--bad:#d64b4b;--line:#dce8e2;
+  --shadow:0 18px 55px rgba(20,67,53,.10);
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#101a17;--fg:#edf7f2;--card:#192622;--muted:#a3b5ad;
+    --accent:#49c6a1;--accent-fg:#08231b;--accent-soft:#203b32;
+    --ok:#55d69a;--bad:#ff8585;--line:#30443c;
+    --shadow:0 18px 55px rgba(0,0,0,.24);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101a17;--fg:#edf7f2;--card:#192622;--muted:#a3b5ad;
+  --accent:#49c6a1;--accent-fg:#08231b;--accent-soft:#203b32;
+  --ok:#55d69a;--bad:#ff8585;--line:#30443c;
+  --shadow:0 18px 55px rgba(0,0,0,.24);
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{color-scheme:light dark;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;min-height:100vh;display:flex;justify-content:center;align-items:flex-start;
+  padding:clamp(14px,3vw,34px);
+  background:
+    radial-gradient(circle at 8% 5%,rgba(8,127,104,.10),transparent 28rem),
+    radial-gradient(circle at 95% 90%,rgba(72,178,139,.10),transparent 25rem),var(--bg);
+  color:var(--fg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+button{font:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:3px}
+.card{
+  width:100%;max-width:760px;align-self:flex-start;margin:clamp(8px,3vh,30px) auto;
+  padding:clamp(20px,4vw,38px);border:1px solid var(--line);border-radius:26px;
+  background:var(--card);box-shadow:var(--shadow);
+}
+h1{font-size:clamp(1.65rem,4vw,2.15rem);letter-spacing:-.045em;line-height:1.12;margin:0 0 10px}
+p{color:var(--muted);line-height:1.65;margin:0 0 16px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;color:var(--muted);font-size:.9rem;margin-bottom:14px}
+.tag{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;color:var(--accent);font-weight:750;letter-spacing:.02em}
+.bar{height:9px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:26px}
+.bar div{height:100%;background:linear-gradient(90deg,var(--accent),#54c49a);border-radius:99px;transition:width .35s ease}
+.q{font-size:clamp(1.12rem,2.5vw,1.35rem);font-weight:750;letter-spacing:-.02em;margin:0 0 20px;line-height:1.45;color:var(--fg)}
+.opt{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  padding:15px 17px;margin-bottom:11px;border:1.5px solid var(--line);
+  border-radius:15px;background:var(--card);color:var(--fg);
+  line-height:1.45;transition:border-color .18s,background .18s,transform .18s;
+}
+.opt::before{
+  content:"";flex:0 0 9px;width:9px;height:9px;border:2px solid var(--muted);
+  border-radius:50%;opacity:.65;
+}
+.opt:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px)}
+.opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 13%,var(--card))}
+.opt.ok::before{background:var(--ok);border-color:var(--ok)}
+.opt.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--card))}
+.opt.bad::before{background:var(--bad);border-color:var(--bad)}
+.opt:disabled{cursor:default;opacity:1}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 21px;border:0;border-radius:13px;background:var(--accent);
+  color:var(--accent-fg);font-weight:750;margin:10px 8px 0 0;
+  box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 22%,transparent);
+  transition:transform .18s,filter .18s;
+}
+.btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.btn.alt{background:transparent;color:var(--fg);border:1.5px solid var(--line);box-shadow:none}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-top:18px}
+.cat{
+  position:relative;min-height:130px;padding:19px 17px;border:1.5px solid var(--line);
+  border-radius:17px;background:var(--card);color:var(--fg);text-align:left;
+  transition:transform .2s,border-color .2s,box-shadow .2s,background .2s;
+}
+.cat:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-3px);box-shadow:0 10px 22px rgba(20,67,53,.07)}
+.cat span{display:block;font-size:1.8rem;margin-bottom:12px}
+.cat b{display:block;font-size:.98rem;line-height:1.3;margin-bottom:5px}
+.cat small{color:var(--muted);font-size:.82rem;line-height:1.4}
+.chips{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0 22px}
+.chip{padding:9px 15px;border:1.5px solid var(--line);border-radius:999px;background:transparent;color:var(--fg);font-size:.88rem;font-weight:650;transition:.18s}
+.chip:hover{border-color:var(--accent)}
+.chip.on{border-color:var(--accent);background:var(--accent);color:var(--accent-fg)}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:20px 0 24px}
+.stat{padding:14px 13px;border:1px solid var(--line);border-radius:15px;background:color-mix(in srgb,var(--accent-soft) 42%,var(--card));min-width:0}
+.stat strong{display:block;font-size:clamp(1.25rem,3vw,1.8rem);letter-spacing:-.04em;color:var(--accent);line-height:1.15;margin-bottom:5px}
+.stat span{display:block;color:var(--muted);font-size:.76rem;line-height:1.35}
+.dashboard-title{font-size:.82rem;color:var(--muted);font-weight:750;letter-spacing:.04em;text-transform:uppercase;margin:22px 0 0}
+
+.score{font-size:clamp(3.2rem,10vw,4.6rem);font-weight:850;letter-spacing:-.06em;margin:14px 0;color:var(--accent)}
+.exp{padding:15px 17px;border-radius:15px;background:var(--accent-soft);border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);line-height:1.55;margin:10px 0 12px;font-size:.95rem}
+#app>h1:first-child{margin-bottom:10px}
+#app>.chips::before{content:"Tempo por pergunta";display:block;flex-basis:100%;font-size:.82rem;color:var(--muted);font-weight:750;letter-spacing:.04em;text-transform:uppercase}
+#app>.grid::before{content:"Escolha uma área para começar";display:block;grid-column:1/-1;color:var(--muted);font-size:.82rem;font-weight:750;letter-spacing:.04em;text-transform:uppercase;margin:2px 0 0}
+@media(max-width:520px){
+  body{padding:10px}
+  .card{margin:8px auto;padding:21px 17px;border-radius:21px}
+  .grid{grid-template-columns:1fr;gap:10px}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .stat{padding:12px}
+  .cat{min-height:0;padding:15px;display:grid;grid-template-columns:42px 1fr;column-gap:12px;align-items:center}
+  .cat span{grid-row:span 2;margin:0;font-size:1.65rem}
+  .cat b{margin:0}
+  .cat small{margin-top:3px}
+  .top{font-size:.8rem;align-items:flex-start}
+  .btn{width:100%;margin:9px 0 0}
+  .opt{padding:14px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="card" id="app"></div>
+<script>
+// Cada pergunta: [enunciado, resposta correta, errada, errada, errada] — as opções são embaralhadas ao jogar.
+const AREAS=[
+{id:"clinica",emoji:"🩺",nome:"Clínica Médica",qs:[
+["Qual é a faixa normal de temperatura corporal de um cão adulto?","37,5 a 39,2 °C","35 a 36 °C","40 a 41 °C","33 a 34 °C"],
+["O vírus da cinomose canina pertence a qual gênero?","Morbillivirus","Parvovirus","Coronavirus","Lyssavirus"],
+["Qual sinal é típico da parvovirose canina?","Vômito e diarreia hemorrágica","Paralisia dos membros posteriores","Tosse seca crônica","Queda de pelos em placas"],
+["Poliúria, polidipsia, polifagia e perda de peso sugerem qual doença?","Diabetes mellitus","Hipotireoidismo","Otite externa","Cinomose"],
+["Qual cor de mucosa sugere anemia?","Pálida","Rosada","Avermelhada","Normal"],
+["Qual é a frequência respiratória normal aproximada de um cão em repouso?","10 a 30 movimentos por minuto","60 a 80 movimentos por minuto","2 a 5 movimentos por minuto","100 a 120 movimentos por minuto"],
+["Fezes escuras, pastosas e de odor forte (melena) indicam sangramento em qual região?","Trato digestivo alto","Reto","Boca","Vesícula urinária"]]},
+{id:"cirurgia",emoji:"🔪",nome:"Cirurgia",qs:[
+["A ovariossalpingohisterectomia (OSH) remove quais estruturas?","Ovários e útero","Apenas os ovários","Apenas o útero","Vagina e vulva"],
+["A síndrome dilatação-vólvulo gástrico é mais comum em cães de qual perfil?","Grande porte e tórax profundo","Raças braquicefálicas","Filhotes de raças toy","Cães sem pelos"],
+["Qual destes fios de sutura é absorvível?","Poliglactina 910","Náilon","Polipropileno","Aço inoxidável"],
+["Qual equipamento é usado para esterilizar instrumentais cirúrgicos?","Autoclave","Micro-ondas","Estufa de cultura","Centrífuga"],
+["O que é a orquiectomia?","Remoção cirúrgica dos testículos","Remoção do útero","Remoção da vesícula biliar","Remoção das glândulas anais"],
+["Qual é o nome da cirurgia de remoção do baço?","Esplenectomia","Nefrectomia","Colecistectomia","Mastectomia"],
+["O que é uma celiotomia?","Incisão para abrir a cavidade abdominal","Abertura da cavidade torácica","Amputação de um membro","Sutura da pele"]]},
+{id:"anestesia",emoji:"💉",nome:"Anestesiologia",qs:[
+["Qual aparelho mede a saturação de oxigênio do paciente?","Oxímetro de pulso","Esfigmomanômetro","Termômetro retal","Glicosímetro"],
+["Qual destes fármacos é um opioide?","Morfina","Acepromazina","Propofol","Xilazina"],
+["Qual anestésico inalatório é muito usado na rotina veterinária?","Isoflurano","Ketamina","Lidocaína","Midazolam"],
+["Para que serve a intubação orotraqueal?","Manter a via aérea pérvia e fornecer oxigênio e anestésico","Alimentar o paciente","Medir a pressão arterial","Aspirar líquido do estômago"],
+["A acepromazina pertence a qual classe de fármacos?","Fenotiazínicos","Opioides","Benzodiazepínicos","Anti-inflamatórios"],
+["Qual fármaco é um antagonista de opioides?","Naloxona","Morfina","Fentanil","Isoflurano"],
+["Qual é o principal objetivo da medicação pré-anestésica (MPA)?","Sedar o animal e reduzir a dose dos anestésicos","Eliminar a necessidade de jejum","Substituir a anestesia geral","Esterilizar o campo cirúrgico"]]},
+{id:"diagnostico",emoji:"🔬",nome:"Diagnóstico e Exames",qs:[
+["Qual exame de imagem utiliza ondas sonoras?","Ultrassonografia","Radiografia","Tomografia","Cintilografia"],
+["Qual tipo de radiação é usada na radiografia?","Raios X (ionizante)","Ultrassom","Infravermelho","Micro-ondas"],
+["O hemograma avalia principalmente o quê?","As células do sangue","A função hepática","A função renal","Os hormônios tireoidianos"],
+["Quais exames são usados para avaliar a função renal?","Ureia e creatinina","ALT e FA","Glicose e frutosamina","T4 e TSH"],
+["Aumento de ALT geralmente sugere lesão em qual órgão?","Fígado","Rim","Pâncreas","Pulmão"],
+["Qual exame usa campo magnético e ondas de rádio para gerar imagens?","Ressonância magnética","Radiografia","Ultrassonografia","Eletrocardiograma"],
+["Qual exame é usado para detectar ovos de parasitas intestinais?","Coproparasitológico","Hemograma","Urinálise","Citologia de pele"]]},
+{id:"grandes",emoji:"🐄",nome:"Grandes Animais",qs:[
+["Qual destes animais é ruminante?","Bovino","Equino","Suíno","Canino"],
+["O que é a mastite?","Inflamação da glândula mamária","Inflamação do casco","Inflamação do rúmen","Inflamação da córnea"],
+["Qual bactéria causa a brucelose bovina?","Brucella abortus","Escherichia coli","Clostridium tetani","Salmonella typhi"],
+["Cólica equina refere-se a que quadro?","Dor abdominal","Dor nos membros","Dor de dente","Dor ocular"],
+["A febre aftosa afeta principalmente animais de qual grupo?","Biungulados (casco fendido)","Aves","Equinos","Peixes"],
+["Como se chama o estômago verdadeiro dos ruminantes?","Abomaso","Rúmen","Retículo","Omaso"],
+["Qual doença é popularmente chamada de “doença da vaca louca”?","Encefalopatia espongiforme bovina","Brucelose","Febre aftosa","Tuberculose bovina"]]},
+{id:"parasito",emoji:"🦟",nome:"Parasitologia e Zoonoses",qs:[
+["Qual inseto transmite a leishmaniose visceral?","Flebotomíneo (mosquito-palha)","Pulga","Carrapato","Barbeiro"],
+["Qual carrapato é o principal transmissor da erliquiose canina?","Rhipicephalus sanguineus","Amblyomma cajennense","Ixodes ricinus","Dermacentor variabilis"],
+["A dirofilariose, o “verme do coração”, é transmitida por quê?","Mosquitos","Carrapatos","Pulgas","Ingestão de carne crua"],
+["Qual zoonose viral é transmitida principalmente pela saliva de animais infectados?","Raiva","Toxoplasmose","Leptospirose","Giardíase"],
+["Qual é o hospedeiro definitivo do Toxoplasma gondii?","Gato","Cão","Bovino","Rato"],
+["A leptospirose é transmitida principalmente pelo contato com o quê?","Urina contaminada, em geral de roedores","Saliva de morcegos","Picada de carrapatos","Fezes de aves"],
+["Qual protozoário causa a babesiose?","Babesia","Giardia","Trichomonas","Entamoeba"]]},
+{id:"reproducao",emoji:"🍼",nome:"Reprodução Animal",qs:[
+["Qual é a duração média da gestação da cadela?","Cerca de 63 dias","Cerca de 30 dias","Cerca de 90 dias","Cerca de 120 dias"],
+["Em qual fase do ciclo estral a cadela aceita a monta?","Estro","Anestro","Diestro","Proestro"],
+["Qual é a duração média da gestação da vaca?","Cerca de 9 meses","Cerca de 4 meses","Cerca de 6 meses","Cerca de 12 meses"],
+["Qual hormônio é responsável pela ejeção do leite?","Ocitocina","Insulina","Tiroxina","Cortisol"],
+["O que é a piometra?","Acúmulo de pus no útero","Tumor de mama","Infecção na bexiga","Cisto no ovário apenas"]]},
+{id:"nutricao",emoji:"🥣",nome:"Nutrição Animal",qs:[
+["Qual destes alimentos é tóxico para cães?","Chocolate","Cenoura cozida","Arroz","Frango cozido"],
+["Qual aminoácido é essencial na dieta dos gatos?","Taurina","Glicina","Alanina","Serina"],
+["Qual nutriente fornece mais energia por grama?","Lipídios (gorduras)","Carboidratos","Proteínas","Fibras"],
+["Uvas e passas podem causar qual problema em cães?","Lesão renal aguda","Anemia por deficiência de ferro","Fratura óssea","Catarata imediata"],
+["O excesso de qual mineral na dieta de cães de raças grandes em crescimento pode causar alterações ósseas?","Cálcio","Sódio","Iodo","Zinco"]]},
+{id:"silvestres",emoji:"🦜",nome:"Animais Silvestres",qs:[
+["Qual bactéria causa a psitacose, zoonose associada a aves?","Chlamydia psittaci","Salmonella typhi","Brucella abortus","Leptospira interrogans"],
+["Como se chama a dilatação do esôfago das aves que armazena alimento?","Papo (inglúvio)","Moela","Cloaca","Proventrículo"],
+["Quais animais fazem parte do grupo dos quelônios?","Tartarugas, jabutis e cágados","Cobras e lagartos","Jacarés e crocodilos","Sapos e rãs"],
+["Qual a importância da radiação UVB para répteis?","Síntese de vitamina D3 e metabolismo do cálcio","Aumentar o apetite apenas","Evitar a troca de pele","Produzir melanina nos olhos"],
+["Qual órgão federal brasileiro é responsável pela fiscalização ambiental e da fauna silvestre?","IBAMA","ANVISA","INMET","IBGE"]]},
+{id:"dermato",emoji:"🧴",nome:"Dermatologia",qs:[
+["Qual ácaro causa a sarna sarcóptica?","Sarcoptes scabiei","Demodex canis","Otodectes cynotis","Ctenocephalides felis"],
+["Qual fungo é causa comum de dermatofitose (“tinha”) em cães e gatos?","Microsporum canis","Candida albicans","Aspergillus fumigatus","Cryptococcus neoformans"],
+["O que significa o termo alopecia?","Perda de pelos","Excesso de pelos","Coceira intensa","Descamação da pele"],
+["Qual levedura é uma causa comum de otite externa em cães?","Malassezia pachydermatis","Giardia lamblia","Escherichia coli apenas","Toxoplasma gondii"],
+["A DAPP é uma hipersensibilidade causada por qual agente?","Saliva da pulga","Pólen de gramíneas","Proteína do leite","Poeira de construção"]]}
+];
+
+// Banco complementar: cada área passa a ter 15 perguntas.
+const EXTRA_QS={
+clinica:[
+["Qual parâmetro é usado para avaliar o tempo de preenchimento capilar?","Tempo necessário para a mucosa recuperar a cor após compressão","Temperatura da orelha","Frequência de micção","Comprimento das unhas"],
+["Em cães e gatos, a obstrução uretral pode provocar principalmente qual alteração?","Dificuldade ou incapacidade de urinar","Aumento da produção de lágrimas","Tosse persistente","Coceira nas patas"],
+["Qual achado é compatível com desidratação?","Mucosas secas e redução da elasticidade da pele","Mucosas úmidas e salivação intensa","Aumento isolado do brilho dos olhos","Crescimento rápido das unhas"],
+["A auscultação cardíaca é realizada para avaliar principalmente:","Os sons e o ritmo do coração","A motilidade intestinal por imagem","A densidade óssea","A concentração de glicose"],
+["Qual condição é caracterizada por acúmulo de pus no útero?","Piometra","Cistite","Gastrite","Rinite"],
+["O escore de condição corporal (ECC) é utilizado para estimar:","A quantidade de gordura corporal do animal","A idade exata do animal","A frequência cardíaca máxima","O grau de socialização"],
+["Em um animal com dispneia, qual deve ser a prioridade inicial?","Minimizar o estresse e avaliar/estabilizar a respiração","Forçar exercício para testar a resistência","Oferecer alimento imediatamente","Realizar banho completo"],
+["A icterícia é caracterizada pela coloração amarelada de mucosas e tecidos devido ao aumento de:","Bilirrubina","Hemoglobina oxigenada","Cálcio","Albumina"]
+],
+cirurgia:[
+["Qual é o principal objetivo da antissepsia da pele antes da cirurgia?","Reduzir a quantidade de microrganismos no local","Aumentar a temperatura corporal","Promover anestesia local","Impedir a coagulação"],
+["O que significa hemostasia durante um procedimento cirúrgico?","Controle do sangramento","Retirada de tecido tumoral","Fechamento da pele","Limpeza do instrumental"],
+["A deiscência de sutura corresponde a:","Abertura ou separação das bordas de uma ferida suturada","Formação normal de cicatriz","Acúmulo de ar no tórax","Inflamação de uma articulação"],
+["Qual cuidado reduz o risco de contaminação do campo cirúrgico?","Manter técnica asséptica e materiais esterilizados","Reutilizar luvas descartáveis","Tocar o campo com mãos não higienizadas","Deixar os instrumentais expostos"],
+["Qual é a finalidade de um dreno cirúrgico?","Permitir a saída de líquidos ou ar acumulados","Substituir todos os pontos","Impedir a cicatrização","Administrar anestesia inalatória"],
+["O que é uma biópsia?","Retirada de amostra de tecido para análise","Coleta de urina por sondagem","Medição da pressão arterial","Aplicação de vacina"],
+["Por que a analgesia pós-operatória é importante?","Para controlar a dor e favorecer a recuperação","Para substituir a esterilização","Para impedir qualquer movimento intestinal","Para dispensar o acompanhamento clínico"],
+["Qual instrumento é comumente utilizado para pinçar vasos sanguíneos?","Pinça hemostática","Afastador de Farabeuf","Cabo de bisturi","Pinça de dissecção sem dente"]
+],
+anestesia:[
+["Qual parâmetro é monitorado pela capnografia?","Concentração de dióxido de carbono no ar expirado","Saturação de oxigênio apenas","Temperatura da pele","Glicemia"],
+["O eletrocardiograma (ECG) permite acompanhar:","A atividade elétrica do coração","A função renal diretamente","A concentração de proteínas na urina","A pressão dentro do estômago"],
+["A hipotensão durante a anestesia significa:","Pressão arterial abaixo do desejável","Aumento da temperatura corporal","Frequência respiratória elevada obrigatoriamente","Excesso de glicose no sangue"],
+["Qual é uma característica do propofol?","É um anestésico intravenoso de ação rápida","É um antibiótico de amplo espectro","É um vermífugo oral","É um anestésico inalatório"],
+["A cetamina é classificada principalmente como:","Anestésico dissociativo","Antibiótico macrolídeo","Anti-inflamatório não esteroidal","Antagonista de opioides"],
+["Qual é a finalidade da pré-oxigenação antes da indução anestésica?","Aumentar a reserva de oxigênio do paciente","Reduzir a frequência cardíaca a zero","Substituir a intubação em todos os casos","Evitar a necessidade de monitorização"],
+["Durante a recuperação anestésica, é importante:","Monitorar vias aéreas, temperatura, respiração e nível de consciência","Deixar o paciente sem observação","Oferecer grande refeição imediatamente","Retirar todos os dispositivos sem avaliação"],
+["A anestesia local tem como objetivo principal:","Bloquear temporariamente a condução nervosa em uma região","Induzir inconsciência em todo o organismo","Tratar infecções bacterianas","Aumentar a produção de hemácias"]
+],
+diagnostico:[
+["Qual exame é mais indicado para avaliar a densidade urinária?","Urinálise com uso de refratômetro","Hemograma","Eletrocardiograma","Radiografia torácica"],
+["A citologia consiste na avaliação de:","Células coletadas de tecidos ou secreções","Apenas estruturas ósseas","Somente a atividade elétrica cardíaca","Apenas a pressão arterial"],
+["Qual amostra é geralmente utilizada no exame coproparasitológico?","Fezes","Pelos","Sangue arterial exclusivamente","Líquido sinovial"],
+["A hiperglicemia indica:","Concentração de glicose no sangue acima do esperado","Concentração baixa de cálcio","Redução de plaquetas","Ausência de proteínas"],
+["Por que radiografias ortogonais são frequentemente solicitadas?","Para observar a região em pelo menos duas projeções diferentes","Para eliminar a necessidade de posicionamento","Para medir diretamente hormônios","Para substituir todos os exames laboratoriais"],
+["A punção aspirativa por agulha fina (PAAF) é utilizada para:","Obter células de uma massa ou estrutura para avaliação citológica","Medir a pressão intracraniana em todos os pacientes","Retirar um órgão inteiro","Avaliar a audição"],
+["A albumina é uma proteína produzida principalmente por qual órgão?","Fígado","Baço","Pulmão","Pâncreas"],
+["Qual exame avalia principalmente a atividade elétrica cerebral?","Eletroencefalograma","Ecocardiograma","Urinálise","Endoscopia"]
+],
+grandes:[
+["Qual é a principal função do rúmen nos bovinos?","Fermentação microbiana dos alimentos","Produção de bile","Filtração do sangue","Armazenamento de urina"],
+["A ruminação envolve:","Regurgitar, remastigar e deglutir o alimento","Engolir sem mastigar uma única vez","Interromper a digestão por completo","Produzir leite no rúmen"],
+["A cetose em vacas leiteiras está associada principalmente a:","Balanço energético negativo no início da lactação","Excesso de água na dieta","Infecção exclusiva dos cascos","Deficiência de oxigênio ambiental"],
+["Qual é a importância do colostro para o bezerro recém-nascido?","Fornecer imunoglobulinas para a imunidade passiva","Substituir todas as vacinas por toda a vida","Impedir o desenvolvimento do rúmen","Aumentar a temperatura do leite"],
+["Em equinos, qual sinal pode indicar cólica?","Inquietação, olhar para o flanco ou deitar repetidamente","Aumento do crescimento da crina","Mudança na cor dos cascos apenas","Coceira nas orelhas"],
+["A laminite em equinos afeta principalmente:","As lâminas sensíveis do casco","Os alvéolos pulmonares","A retina","O intestino grosso"],
+["Qual é uma medida importante na prevenção da mastite bovina?","Higiene adequada durante a ordenha","Compartilhar panos sujos entre animais","Suspender a limpeza dos tetos","Manter equipamentos de ordenha sem higienização"],
+["O exame andrológico de um touro avalia principalmente:","A capacidade reprodutiva e a qualidade do sêmen","A produção de leite","A dentição de bezerros","A função respiratória durante o exercício"]
+],
+parasito:[
+["Dipylidium caninum é comumente transmitido aos cães e gatos pela ingestão de:","Pulgas infectadas","Água com excesso de cálcio","Carne cozida sem gordura","Pólen"],
+["Ancylostoma spp. é um nematódeo que pode causar:","Anemia e enterite","Fraturas ósseas","Catarata","Otite média"],
+["Toxocara canis é importante em saúde pública porque:","Pode causar larva migrans visceral ou ocular em humanos","É transmitido exclusivamente por mosquitos","Afeta apenas aves adultas","Não apresenta potencial zoonótico"],
+["Giardia duodenalis é um protozoário associado principalmente a:","Diarreia e alterações intestinais","Doença cardíaca congênita","Fraturas de membros","Dermatite por contato"],
+["Qual medida ajuda a reduzir a transmissão de parasitas intestinais?","Recolher fezes e manter higiene ambiental","Deixar fezes acumuladas no ambiente","Compartilhar utensílios sem limpeza","Evitar exames coproparasitológicos"],
+["A prevenção da dirofilariose deve considerar principalmente:","Controle de mosquitos e medidas preventivas orientadas pelo veterinário","Apenas banhos semanais","Restrição de água","Uso de antibiótico sem avaliação"],
+["A leptospirose é frequentemente transmitida pelo contato com:","Água ou solo contaminados por urina de animais infectados","Pelos secos de animais saudáveis","Picadas de pulgas exclusivamente","Alimentos ricos em proteínas"],
+["Qual é uma medida adequada para prevenir zoonoses parasitárias?","Higienizar as mãos e realizar controle parasitário orientado","Permitir contato com fezes de animais","Consumir água sem tratamento","Dispensar o manejo sanitário"]
+],
+reproducao:[
+["Qual hormônio está diretamente relacionado à manutenção do corpo lúteo em cadelas?","Progesterona","Insulina","Tiroxina","Melatonina"],
+["O diagnóstico de gestação em cadelas pode ser realizado por ultrassonografia a partir de aproximadamente:","25 dias após a ovulação, dependendo do caso","2 dias após a cobertura","Apenas no momento do parto","Um ano após a cobertura"],
+["A distocia é definida como:","Dificuldade ou impedimento do parto","Ausência de cio durante toda a vida","Inflamação da glândula mamária","Produção excessiva de leite"],
+["A coleta de sêmen em reprodutores permite avaliar:","Volume, aspecto, motilidade e morfologia espermática","Apenas a temperatura corporal","A densidade óssea","A frequência respiratória"],
+["O criptorquidismo ocorre quando:","Um ou ambos os testículos não descem para o escroto","O útero apresenta infecção","A fêmea não produz leite","O ovário libera dois óvulos"],
+["Qual estrutura conecta o feto à placenta e permite trocas durante a gestação?","Cordão umbilical","Esôfago","Traqueia","Ureter"],
+["A involução uterina corresponde:","Ao retorno gradual do útero ao estado próximo ao não gestante após o parto","À formação dos ovários","Ao início da puberdade","À produção de espermatozoides"],
+["Em gatas, o ciclo reprodutivo é geralmente descrito como:","Poliéstrico sazonal, com influência do fotoperíodo","Monoestral obrigatório","Sem ciclo estral","Contínuo e independente da luz"],
+["A placenta tem como uma de suas funções:","Permitir trocas de nutrientes, gases e resíduos entre mãe e feto","Produzir urina fetal diretamente","Substituir os pulmões maternos","Impedir toda passagem de substâncias"],
+["Qual sinal pode indicar início do trabalho de parto em uma cadela?","Inquietação, comportamento de ninho e alterações de temperatura","Aumento permanente do apetite","Crescimento das unhas","Ausência de movimentos respiratórios"]
+],
+nutricao:[
+["Uma dieta completa e balanceada deve:","Fornecer nutrientes essenciais em quantidades e proporções adequadas","Conter apenas proteínas","Ser igual para todas as espécies e idades","Excluir toda fonte de gordura"],
+["Qual nutriente fornece aminoácidos para formação e reparo dos tecidos?","Proteína","Água","Fibra insolúvel","Vitamina C"],
+["A relação cálcio:fósforo é importante principalmente para:","Saúde e desenvolvimento ósseo","Pigmentação dos pelos","Produção de bile","Audição"],
+["Qual é uma estratégia adequada para animais com sobrepeso?","Ajustar a ingestão energética e acompanhar o peso com orientação profissional","Reduzir água disponível","Oferecer petiscos livremente","Suspender toda atividade física sem avaliação"],
+["A água é essencial porque:","Participa do transporte de substâncias e da regulação da temperatura","Fornece a maior parte das calorias","Substitui todos os minerais","Não participa do metabolismo"],
+["Mudanças de dieta em cães e gatos devem, em geral, ser feitas gradualmente para:","Reduzir o risco de desconforto gastrointestinal","Aumentar a necessidade de jejum","Impedir a absorção de nutrientes","Evitar a ingestão de água"],
+["Em herbívoros, a fibra alimentar é importante para:","Manter a motilidade e a função adequada do trato digestório","Impedir a fermentação intestinal","Substituir todas as proteínas","Eliminar a necessidade de água"],
+["Qual nutriente é especialmente importante na dieta de gatos por ser essencial para a espécie?","Taurina","Amido","Celulose","Vitamina K em excesso"],
+["Filhotes precisam de uma alimentação específica porque:","Estão em fase de crescimento e têm necessidades nutricionais próprias","Não precisam de proteínas","Devem consumir a mesma quantidade de adultos","Não necessitam de minerais"],
+["A obesidade em cães e gatos está associada a maior risco de:","Problemas articulares e alterações metabólicas","Aumento da longevidade em todos os casos","Imunidade sempre superior","Ausência de doenças crônicas"]
+],
+silvestres:[
+["O enriquecimento ambiental tem como objetivo:","Estimular comportamentos naturais e melhorar o bem-estar","Impedir toda movimentação do animal","Substituir alimentação e água","Aumentar o estresse para treinamento"],
+["Aves não possuem qual estrutura anatômica?","Diafragma muscular como o dos mamíferos","Pulmões","Coração","Rins"],
+["Répteis são considerados ectotérmicos porque:","Dependem principalmente de fontes externas para regular a temperatura corporal","Mantêm sempre temperatura interna constante","Não sofrem influência da temperatura ambiente","Produzem calor por suor abundante"],
+["O contato com répteis pode representar risco de transmissão de qual bactéria?","Salmonella spp.","Lactobacillus acidophilus","Bifidobacterium longum","Bacillus subtilis"],
+["O manejo de animais silvestres deve priorizar:","Segurança, redução do estresse e contenção adequada à espécie","Perseguição prolongada","Ruído intenso","Contato físico desnecessário"],
+["A CITES é uma convenção relacionada principalmente:","Ao comércio internacional de espécies ameaçadas de fauna e flora","À vacinação obrigatória de cães","À inspeção de alimentos industrializados","Ao registro de animais domésticos"],
+["Qual é uma característica das penas de voo das aves?","Ajudam a gerar sustentação e propulsão durante o voo","Produzem leite para os filhotes","Substituem os ossos das asas","Regulam a produção de bile"],
+["Por que a dieta de animais silvestres deve respeitar a espécie?","Porque suas necessidades e hábitos alimentares variam muito","Porque todos são exclusivamente carnívoros","Porque todos digerem os mesmos alimentos","Porque a espécie não influencia a nutrição"],
+["Na avaliação de uma ave, a observação das fezes pode ajudar a:","Identificar alterações de saúde e digestão","Determinar com precisão a idade","Substituir o exame físico completo","Definir o sexo em todas as espécies"],
+["O estresse de captura em animais silvestres pode:","Provocar alterações fisiológicas e agravar o estado clínico","Melhorar sempre a imunidade","Eliminar a necessidade de anestesia","Não produzir efeitos no organismo"]
+],
+dermato:[
+["A dermatite atópica canina está frequentemente relacionada a:","Hipersensibilidade a alérgenos ambientais","Infecção exclusiva por vírus da raiva","Deficiência de cálcio apenas","Trauma ósseo"],
+["A piodermite é uma infecção que acomete principalmente:","A pele, frequentemente envolvendo bactérias","O tecido ósseo exclusivamente","O músculo cardíaco","A retina"],
+["Qual exame simples pode auxiliar na investigação de otite externa?","Citologia do material do ouvido","Eletrocardiograma","Teste de esforço","Radiografia de membros"],
+["Demodex canis está associado a qual enfermidade?","Demodicose","Dermatofitose","Leishmaniose visceral","Escabiose humana"],
+["Qual é uma medida importante no controle da dermatite alérgica à picada de pulga?","Controle efetivo de pulgas em todos os animais e no ambiente","Aplicar perfume na pele","Suspender a limpeza do ambiente","Tratar apenas a coceira sem controlar pulgas"],
+["O raspado cutâneo profundo é especialmente útil para pesquisar:","Ácaros como Demodex spp.","Bactérias presentes no sangue","Alterações cardíacas","Parasitas intestinais adultos"],
+["A dermatofitose é considerada zoonose porque:","Alguns fungos causadores podem ser transmitidos entre animais e pessoas","É transmitida apenas por mosquitos","Atinge somente plantas","Não pode infectar humanos"],
+["Qual cuidado é recomendado na limpeza dos ouvidos?","Usar produto apropriado e evitar introduzir objetos profundamente","Usar cotonetes profundamente no canal","Aplicar álcool concentrado em todos os casos","Irrigar sem avaliação quando há dor"],
+["O prurido é definido como:","Sensação que provoca vontade de coçar","Perda completa da sensibilidade","Aumento da temperatura corporal","Sangramento espontâneo"],
+["A alopecia localizada pode ter várias causas. Qual alternativa é uma delas?","Infecções, parasitas ou alterações hormonais","Somente excesso de exercício","Apenas ingestão de água","Exclusivamente idade avançada"]
+]
+};
+AREAS.forEach(a=>a.qs.push(...EXTRA_QS[a.id]));
+
+const app=document.getElementById("app");
+const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+let area,list,i,score,locked,timerId,left,TIME=loadTime();
+function loadTime(){try{return +localStorage.getItem("vet-time")||0}catch(e){return 0}}
+function best(id){try{return +localStorage.getItem("vet-best-v2-"+id)||0}catch(e){return 0}}
+function saveBest(id,n){try{if(n>best(id))localStorage.setItem("vet-best-v2-"+id,n)}catch(e){}}
+function readStats(){try{return JSON.parse(localStorage.getItem("vet-stats-v2"))||{answered:0,correct:0,attempts:0,lastScore:null,lastTotal:0,lastArea:""}}catch(e){return {answered:0,correct:0,attempts:0,lastScore:null,lastTotal:0,lastArea:""}}}
+function saveAnswer(isCorrect){const st=readStats();st.answered++;if(isCorrect)st.correct++;try{localStorage.setItem("vet-stats-v2",JSON.stringify(st))}catch(e){}}
+function saveAttempt(){const st=readStats();st.attempts++;st.lastScore=score;st.lastTotal=list.length;st.lastArea=area.nome;st.lastAt=Date.now();try{localStorage.setItem("vet-stats-v2",JSON.stringify(st))}catch(e){}}
+function rate(st){return st.answered?Math.round(st.correct/st.answered*100):0}
+
+function menu(){
+  const st=readStats();
+  app.innerHTML=`<div class="tag" style="margin-bottom:12px">🐾 APRENDIZADO • MEDICINA VETERINÁRIA</div><h1>Quiz de Medicina Veterinária</h1><p>150 perguntas para testar seus conhecimentos, revisar conteúdos e acompanhar sua evolução.</p><div class="dashboard-title">Seu desempenho</div><div class="stats"><div class="stat"><strong>${st.answered}</strong><span>Questões respondidas</span></div><div class="stat"><strong>${rate(st)}%</strong><span>Taxa de acertos</span></div><div class="stat"><strong>${st.attempts}</strong><span>Simulados concluídos</span></div><div class="stat"><strong>${st.lastScore===null?"—":st.lastScore+"/"+st.lastTotal}</strong><span>Último resultado</span></div></div><div class="chips" id="chips"></div><div class="grid" id="grid"></div>`;
+  const ch=document.getElementById("chips");
+  [[0,"Sem tempo"],[10,"10 s"],[20,"20 s"],[30,"30 s"],[60,"60 s"]].forEach(([s,l])=>{
+    const c=document.createElement("button");c.className="chip"+(TIME===s?" on":"");c.textContent=l;
+    c.onclick=()=>{TIME=s;try{localStorage.setItem("vet-time",s)}catch(e){}ch.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));c.classList.add("on")};
+    ch.appendChild(c);
+  });
+  const g=document.getElementById("grid");
+  const m=document.createElement("button");m.className="cat";m.style.gridColumn="1 / -1";
+  m.innerHTML=`<span>🎲</span><b>Modo Misto</b><small>15 perguntas sorteadas de todas as áreas · Melhor: ${best("misto")}/15</small>`;
+  m.onclick=()=>play(MIX);g.appendChild(m);
+  AREAS.forEach(a=>{
+    const b=document.createElement("button");b.className="cat";
+    b.innerHTML=`<span>${a.emoji}</span><b>${a.nome}</b><small>Melhor: ${best(a.id)}/${a.qs.length}</small>`;
+    b.onclick=()=>play(a);g.appendChild(b);
+  });
+}
+// Explicações, na mesma ordem das perguntas de cada área.
+const EXPL={
+clinica:["Em cães adultos saudáveis, a temperatura retal fica entre 37,5 e 39,2 °C.","A cinomose é causada por um Morbillivirus, da família Paramyxoviridae.","O parvovírus lesa as células do intestino, causando vômito e diarreia, muitas vezes com sangue.","Esse conjunto de sinais é a apresentação clássica do diabetes mellitus.","Mucosas pálidas indicam menos hemácias ou má perfusão, como na anemia.","Em repouso, a frequência respiratória do cão costuma ficar entre 10 e 30 movimentos por minuto.","A melena é sangue digerido, geralmente vindo do estômago ou do intestino delgado."],
+cirurgia:["Na OSH, retiram-se os dois ovários e o útero.","A dilatação-vólvulo gástrico atinge sobretudo cães grandes de tórax profundo, como o Dogue Alemão.","A poliglactina 910 é sintética e absorvível; náilon, polipropileno e aço não são absorvidos.","A autoclave esteriliza os instrumentais com vapor sob pressão.","Na orquiectomia, os testículos são removidos, ou seja, é a castração do macho.","Esplenectomia é a retirada do baço; os outros termos se referem a rim, vesícula biliar e mama.","Celiotomia é a abertura cirúrgica do abdome."],
+anestesia:["O oxímetro de pulso estima a saturação de oxigênio da hemoglobina (SpO2).","A morfina é um opioide, usado principalmente para analgesia.","O isoflurano é um anestésico inalatório muito usado em cães e gatos.","O tubo traqueal garante a via aérea e permite oferecer oxigênio e anestésico inalatório.","A acepromazina é um tranquilizante da classe das fenotiazinas.","A naloxona reverte os efeitos dos opioides.","A MPA acalma o paciente e reduz a quantidade de anestésico necessária."],
+diagnostico:["A ultrassonografia forma imagens a partir de ondas sonoras de alta frequência.","A radiografia usa raios X, que são uma radiação ionizante.","O hemograma analisa hemácias, leucócitos e plaquetas.","Ureia e creatinina costumam subir quando a função renal está reduzida.","A ALT é uma enzima hepática que sobe quando há lesão de hepatócitos.","A ressonância usa campo magnético e ondas de rádio, sem radiação ionizante.","O exame de fezes identifica ovos e cistos de parasitas."],
+grandes:["Bovinos são ruminantes, com estômago de quatro compartimentos.","Mastite é a inflamação da glândula mamária, comum em vacas leiteiras.","A Brucella abortus causa brucelose, que provoca aborto em bovinos e também é zoonose.","Cólica é dor abdominal, uma das principais emergências dos equinos.","A febre aftosa atinge animais de casco fendido, como bovinos, suínos e ovinos.","O abomaso é o compartimento equivalente ao estômago dos animais monogástricos.","A EEB é uma doença priônica que afeta o sistema nervoso dos bovinos."],
+parasito:["As fêmeas de flebotomíneos transmitem a Leishmania ao picar.","O carrapato-vermelho-do-cão transmite a Ehrlichia canis.","As larvas de Dirofilaria immitis são transmitidas pela picada de mosquitos.","O vírus da raiva é transmitido principalmente pela saliva, em geral por mordidas.","O gato elimina oocistos de Toxoplasma nas fezes, completando o ciclo sexuado do parasita.","A bactéria é eliminada na urina de animais infectados, sobretudo roedores.","A Babesia infecta hemácias e é transmitida por carrapatos."],
+reproducao:["A gestação da cadela dura cerca de 63 dias a partir da ovulação.","O estro é o período de receptividade sexual, em que a fêmea aceita a monta.","A gestação bovina dura em média 283 dias, ou cerca de 9 meses.","A ocitocina provoca a contração das células que expulsam o leite.","A piometra é uma infecção do útero com acúmulo de pus, comum em cadelas não castradas."],
+nutricao:["O chocolate contém teobromina e cafeína, substâncias tóxicas para cães.","Os gatos não sintetizam taurina em quantidade suficiente; a falta causa problemas cardíacos e oculares.","As gorduras fornecem cerca de 9 kcal/g, mais que o dobro de carboidratos e proteínas.","Uvas e passas podem causar lesão renal aguda em cães, mesmo em pequenas quantidades.","O excesso de cálcio em filhotes de raças grandes pode causar doenças ósseas do desenvolvimento."],
+silvestres:["A psitacose é causada pela Chlamydia psittaci e pode passar de aves para humanos.","O papo (inglúvio) armazena o alimento antes da digestão.","Os quelônios incluem tartarugas, jabutis e cágados.","A UVB permite sintetizar vitamina D3, necessária para absorver cálcio.","O IBAMA fiscaliza e licencia atividades ambientais, incluindo a proteção da fauna silvestre."],
+dermato:["O Sarcoptes scabiei escava a pele e causa coceira intensa.","O Microsporum canis é um dos fungos que mais causam “tinha” em cães e gatos.","Alopecia é a ausência ou perda de pelos.","A Malassezia pachydermatis é uma levedura da pele e dos ouvidos que prolifera nas otites.","Na DAPP, proteínas da saliva da pulga provocam reação alérgica intensa, mesmo com poucas picadas."]
+};
+
+const EXTRA_EXPL={
+clinica:[
+"O tempo de preenchimento capilar é avaliado pressionando uma mucosa e observando quanto tempo a cor leva para retornar; deve ser interpretado junto de outros parâmetros de perfusão.",
+"A obstrução uretral, especialmente em gatos machos, pode ser uma emergência e exige avaliação veterinária imediata.",
+"Mucosas secas e menor elasticidade cutânea podem ocorrer na desidratação, mas a avaliação deve considerar o conjunto de sinais.",
+"A auscultação permite avaliar frequência, ritmo e sons cardíacos, incluindo possíveis sopros.",
+"Piometra é uma infecção uterina potencialmente grave, que pode exigir atendimento urgente.",
+"O ECC é uma ferramenta prática para estimar reservas de gordura e acompanhar o estado nutricional.",
+"Em dificuldade respiratória, reduzir manipulação e estresse e priorizar a estabilização pode evitar piora do quadro.",
+"A bilirrubina elevada pode causar icterícia; as causas incluem alterações pré-hepáticas, hepáticas e pós-hepáticas."
+],
+cirurgia:[
+"A antissepsia reduz a carga microbiana da pele e integra os cuidados para prevenir infecção do sítio cirúrgico.",
+"Hemostasia reúne técnicas para controlar o sangramento durante o procedimento.",
+"Deiscência é a separação das bordas de uma ferida que havia sido fechada.",
+"A técnica asséptica e a esterilização adequada reduzem o risco de infecção.",
+"Drenos permitem a saída controlada de secreções, líquidos ou ar, conforme a indicação.",
+"A biópsia fornece tecido para avaliação histopatológica e auxilia no diagnóstico.",
+"O controle da dor melhora o conforto e pode favorecer a recuperação e o retorno à atividade.",
+"Pinças hemostáticas são projetadas para comprimir vasos e auxiliar no controle do sangramento."
+],
+anestesia:[
+"A capnografia acompanha o CO2 expirado e ajuda a avaliar ventilação e alterações circulatórias.",
+"O ECG registra a atividade elétrica cardíaca e auxilia na identificação de alterações do ritmo.",
+"Hipotensão é a redução da pressão arterial e pode comprometer a perfusão dos órgãos.",
+"O propofol é usado por via intravenosa para indução e, em alguns protocolos, manutenção anestésica.",
+"A cetamina produz anestesia dissociativa e é frequentemente combinada com outros fármacos.",
+"A pré-oxigenação aumenta a reserva de oxigênio antes de períodos de ventilação reduzida.",
+"A recuperação também exige vigilância, pois podem ocorrer obstrução de vias aéreas, hipotermia e alterações respiratórias.",
+"Anestésicos locais bloqueiam canais de sódio e interrompem temporariamente a condução dos impulsos nervosos."
+],
+diagnostico:[
+"A densidade urinária é medida com refratômetro e ajuda a avaliar a capacidade de concentração renal.",
+"A citologia examina células e pode auxiliar na investigação de inflamações, infecções e tumores.",
+"O exame coproparasitológico pesquisa formas parasitárias nas fezes.",
+"Hiperglicemia é o aumento da glicose sanguínea e deve ser interpretada conforme o contexto clínico.",
+"Projeções diferentes ajudam a localizar lesões e reduzem sobreposições que podem esconder alterações.",
+"A PAAF coleta células com agulha fina, geralmente de nódulos, linfonodos ou órgãos acessíveis.",
+"A albumina é sintetizada pelo fígado e contribui para a pressão oncótica plasmática.",
+"O eletroencefalograma registra a atividade elétrica do cérebro."
+],
+grandes:[
+"O rúmen abriga microrganismos que fermentam componentes da dieta, especialmente fibras.",
+"A ruminação inclui regurgitação do bolo alimentar, remastigação e nova deglutição.",
+"A cetose ocorre quando a demanda energética supera a ingestão, favorecendo mobilização de gordura e formação de corpos cetônicos.",
+"O colostro fornece imunoglobulinas essenciais à transferência de imunidade passiva ao bezerro.",
+"Alterações de comportamento, postura e apetite podem ser sinais de dor abdominal em equinos.",
+"Na laminite, a inflamação e a lesão das lâminas do casco podem causar dor intensa e claudicação.",
+"A higiene da ordenha e o manejo correto dos equipamentos ajudam a prevenir novas infecções mamárias.",
+"O exame andrológico reúne avaliação clínica e reprodutiva do macho, incluindo análise seminal."
+],
+parasito:[
+"O Dipylidium caninum tem pulgas como hospedeiros intermediários; o animal se infecta ao ingeri-las.",
+"Ancilostomídeos podem causar perda de sangue intestinal, anemia e diarreia.",
+"O Toxocara canis pode causar larva migrans visceral e, em alguns casos, ocular em pessoas.",
+"Giardia é transmitida pela ingestão de cistos e pode provocar diarreia, embora algumas infecções sejam assintomáticas.",
+"Higiene ambiental e remoção rápida das fezes reduzem a contaminação por formas parasitárias.",
+"A prevenção da dirofilariose depende de avaliação de risco, prevenção medicamentosa indicada e controle de mosquitos.",
+"A leptospirose é adquirida frequentemente por contato de mucosas ou pele lesionada com ambientes contaminados por urina.",
+"Medidas de higiene, água segura e controle parasitário reduzem o risco de várias zoonoses."
+],
+reproducao:[
+"A progesterona produzida pelo corpo lúteo é importante para manter a gestação da cadela.",
+"A ultrassonografia pode detectar gestação relativamente cedo; o momento adequado depende da data de ovulação e da qualidade do exame.",
+"Distocia é um parto difícil, que pode exigir intervenção veterinária.",
+"A avaliação seminal considera diferentes características, não apenas a motilidade.",
+"O criptorquidismo pode ser unilateral ou bilateral e requer avaliação veterinária.",
+"O cordão umbilical conecta o feto à placenta e contém vasos envolvidos nas trocas fetomaternas.",
+"Após o parto, o útero passa por involução, retornando gradualmente ao tamanho e condição anteriores.",
+"As gatas apresentam atividade reprodutiva influenciada pelo fotoperíodo e podem ter vários ciclos na estação reprodutiva.",
+"A placenta participa das trocas de gases, nutrientes e resíduos entre mãe e feto.",
+"Mudanças comportamentais e fisiológicas podem anteceder o parto; sinais de distocia exigem avaliação rápida."
+],
+nutricao:[
+"Uma dieta completa e balanceada fornece os nutrientes essenciais nas quantidades adequadas à espécie e fase de vida.",
+"Proteínas são formadas por aminoácidos e participam da estrutura e reparação dos tecidos, entre outras funções.",
+"O equilíbrio de cálcio e fósforo é importante para mineralização e desenvolvimento do esqueleto.",
+"O controle do peso combina ajuste alimentar, atividade apropriada e acompanhamento individual.",
+"A água participa de reações metabólicas, transporte de nutrientes e termorregulação.",
+"A transição gradual de alimentos pode ajudar a reduzir alterações gastrointestinais.",
+"A fibra auxilia a motilidade e a saúde digestiva, com necessidades que variam entre espécies.",
+"A taurina é um aminoácido essencial para gatos e precisa estar presente em sua alimentação.",
+"As necessidades de energia, proteínas, minerais e vitaminas mudam durante o crescimento.",
+"O excesso de gordura corporal aumenta o risco de doenças articulares e metabólicas."
+],
+silvestres:[
+"O enriquecimento ambiental oferece desafios e estímulos adequados que favorecem comportamentos naturais.",
+"As aves não possuem diafragma muscular como os mamíferos; sua ventilação depende de movimentos do sistema respiratório e sacos aéreos.",
+"Répteis dependem de fontes externas de calor e precisam de gradientes térmicos apropriados no ambiente.",
+"Salmonella pode estar presente no trato intestinal de répteis e ser transmitida por contato com animais ou superfícies contaminadas.",
+"A contenção deve ser planejada conforme espécie, condição clínica e risco para o animal e a equipe.",
+"A CITES regula o comércio internacional de espécies listadas para contribuir com sua conservação.",
+"As penas de voo, especialmente nas asas e cauda, contribuem para sustentação, direção e propulsão.",
+"Há grande diversidade de dietas entre espécies silvestres; a alimentação deve reproduzir necessidades específicas.",
+"Mudanças nas fezes podem sinalizar alterações digestivas, parasitárias ou sistêmicas e devem ser avaliadas no contexto.",
+"A captura e contenção podem causar respostas intensas ao estresse, por isso devem ser breves e tecnicamente adequadas."
+],
+dermato:[
+"A dermatite atópica é uma doença inflamatória e pruriginosa associada à predisposição e à resposta a alérgenos ambientais.",
+"Piodermite é uma infecção bacteriana da pele, frequentemente secundária a outra condição dermatológica.",
+"A citologia auricular ajuda a identificar leveduras, bactérias e células inflamatórias.",
+"Demodex canis é um ácaro associado à demodicose, que pode causar alopecia e inflamação.",
+"O controle de pulgas deve abranger os animais contactantes e o ambiente, conforme orientação veterinária.",
+"O raspado profundo aumenta a chance de encontrar ácaros que vivem nos folículos pilosos, como Demodex.",
+"Alguns dermatófitos infectam pessoas, tornando importante a higiene e o cuidado no manejo.",
+"A limpeza deve utilizar produtos apropriados; dor, secreção ou suspeita de lesão exigem avaliação antes de manipular o ouvido.",
+"Prurido é a sensação desagradável que leva o animal a coçar, lamber ou morder a pele.",
+"Alopecia localizada pode decorrer de parasitas, infecções, alergias, alterações hormonais ou trauma."
+]
+};
+Object.keys(EXTRA_EXPL).forEach(id=>EXPL[id].push(...EXTRA_EXPL[id]));
+
+const ITEMS=AREAS.flatMap(x=>x.qs.map((q,k)=>({q,e:(EXPL[x.id]||[])[k]||"",a:x})));
+const MIX={id:"misto",emoji:"🎲",nome:"Modo Misto"};
+function play(a){area=a;list=a.id==="misto"?shuffle(ITEMS).slice(0,15):shuffle(ITEMS.filter(x=>x.a===a));i=0;score=0;show()}
+function show(){
+  locked=false;clearInterval(timerId);
+  if(TIME){left=TIME;timerId=setInterval(()=>{left--;const t=document.getElementById("tl");if(t){t.textContent=left;if(left<=5)t.style.color="var(--bad)"}if(left<=0)pick(null)},1000)}
+  const it=list[i],c=it.q;
+  app.innerHTML=`<div class="top"><span class="tag">${it.a.emoji} ${it.a.nome}</span><span>${i+1}/${list.length} · ${score} pts${TIME?` · ⏱ <b id="tl">${TIME}</b>s`:""}</span></div>
+  <div class="bar"><div style="width:${i/list.length*100}%"></div></div>
+  <p class="q"></p><div id="opts"></div><button class="btn" id="next" style="display:none"></button>`;
+  app.querySelector(".q").textContent=c[0];
+  const box=document.getElementById("opts");
+  shuffle(c.slice(1).map((t,k)=>({t,ok:k===0}))).forEach(o=>{
+    const b=document.createElement("button");b.className="opt";b.textContent=o.t;b.dataset.ok=o.ok?"1":"";
+    b.onclick=()=>pick(b);box.appendChild(b);
+  });
+}
+function pick(btn){
+  if(locked)return;locked=true;clearInterval(timerId);
+  document.querySelectorAll(".opt").forEach(b=>{b.disabled=true;if(b.dataset.ok)b.classList.add("ok")});
+  const isCorrect=!!(btn&&btn.dataset.ok);
+  if(isCorrect)score++;else if(btn)btn.classList.add("bad");
+  saveAnswer(isCorrect);
+  const n=document.getElementById("next");
+  const ex=document.createElement("div");ex.className="exp";ex.textContent=(btn&&btn.dataset.ok?"✅ Correto! ":btn?"❌ Incorreto. ":"⏰ Tempo esgotado. ")+list[i].e;n.before(ex);
+  n.textContent=i+1<list.length?"Próxima":"Ver resultado";n.style.display="inline-block";
+  n.onclick=()=>{i++;i<list.length?show():end()};
+}
+function end(){
+  saveBest(area.id,score);saveAttempt();
+  const p=score/list.length;
+  const msg=p===1?"Perfeito! 🏆":p>=.6?"Muito bem! 👏":"Continue estudando! 💪";
+  const st=readStats();
+  app.innerHTML=`<h1>${msg}</h1><p>${area.emoji} ${area.nome}</p><div class="score">${score}/${list.length}</div><p>Melhor pontuação: ${best(area.id)}/${list.length} · Aproveitamento nesta rodada: ${Math.round(p*100)}%</p><div class="stats"><div class="stat"><strong>${st.answered}</strong><span>Questões respondidas</span></div><div class="stat"><strong>${rate(st)}%</strong><span>Taxa geral de acertos</span></div></div>
+  <button class="btn" id="again">Jogar de novo</button><button class="btn alt" id="menu">Voltar ao início</button>`;
+  document.getElementById("again").onclick=()=>play(area);
+  document.getElementById("menu").onclick=menu;
+}
+menu();
+</script>
+</body>
+</html>
