@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quiz de Medicina Veterinária</title>
+<style>
+:root{--bg:#f5f5f7;--fg:#1d1d1f;--card:#fff;--muted:#6e6e73;--accent:#0d9488;--accent-fg:#fff;--ok:#16a34a;--bad:#dc2626;--line:#d2d2d7;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111114;--fg:#f2f2f4;--card:#1c1c21;--muted:#9a9aa3;--accent:#2dd4bf;--accent-fg:#0b1f1c;--ok:#4ade80;--bad:#f87171;--line:#34343c}}
+:root[data-theme="dark"]{--bg:#111114;--fg:#f2f2f4;--card:#1c1c21;--muted:#9a9aa3;--accent:#2dd4bf;--accent-fg:#0b1f1c;--ok:#4ade80;--bad:#f87171;--line:#34343c}
+html{color-scheme:light dark;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;display:flex;justify-content:center;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;width:100%;max-width:560px;align-self:flex-start;margin-top:24px}
+h1{font-size:1.5rem;margin:0 0 8px}
+p{color:var(--muted);line-height:1.5;margin:0 0 12px}
+.top{display:flex;justify-content:space-between;color:var(--muted);font-size:.9rem;margin-bottom:8px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:20px}
+.bar div{height:100%;background:var(--accent);transition:width .3s}
+.q{font-size:1.2rem;font-weight:600;margin:0 0 16px;line-height:1.4;color:var(--fg)}
+button{font:inherit;cursor:pointer}
+.opt{display:block;width:100%;text-align:left;padding:14px 16px;margin-bottom:10px;border:2px solid var(--line);border-radius:12px;background:transparent;color:var(--fg)}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+.opt.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 15%,transparent)}
+.btn{padding:12px 24px;border:0;border-radius:12px;background:var(--accent);color:var(--accent-fg);font-weight:600;margin:8px 8px 0 0}
+.btn.alt{background:transparent;color:var(--fg);border:2px solid var(--line)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.cat{padding:16px 12px;border:2px solid var(--line);border-radius:12px;background:transparent;color:var(--fg);text-align:left}
+.cat:hover{border-color:var(--accent)}
+.cat span{display:block;font-size:1.6rem;margin-bottom:6px}
+.cat b{display:block;font-size:.95rem}
+.cat small{color:var(--muted)}
+.score{font-size:3rem;font-weight:700;margin:8px 0}
+.tag{display:inline-block;font-size:.8rem;color:var(--accent);font-weight:600}
+.exp{padding:12px 14px;border-radius:12px;background:color-mix(in srgb,var(--accent) 12%,transparent);line-height:1.45;margin:4px 0 8px;font-size:.95rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.chip{padding:8px 14px;border:2px solid var(--line);border-radius:999px;background:transparent;color:var(--fg);font-size:.9rem}
+.chip.on{border-color:var(--accent);background:var(--accent);color:var(--accent-fg);font-weight:600}
+</style>
+</head>
+<body>
+<div class="card" id="app"></div>
+<script>
+// Cada pergunta: [enunciado, resposta correta, errada, errada, errada] — as opções são embaralhadas ao jogar.
+const AREAS=[
+{id:"clinica",emoji:"🩺",nome:"Clínica Médica",qs:[
+["Qual é a faixa normal de temperatura corporal de um cão adulto?","37,5 a 39,2 °C","35 a 36 °C","40 a 41 °C","33 a 34 °C"],
+["O vírus da cinomose canina pertence a qual gênero?","Morbillivirus","Parvovirus","Coronavirus","Lyssavirus"],
+["Qual sinal é típico da parvovirose canina?","Vômito e diarreia hemorrágica","Paralisia dos membros posteriores","Tosse seca crônica","Queda de pelos em placas"],
+["Poliúria, polidipsia, polifagia e perda de peso sugerem qual doença?","Diabetes mellitus","Hipotireoidismo","Otite externa","Cinomose"],
+["Qual cor de mucosa sugere anemia?","Pálida","Rosada","Avermelhada","Normal"],
+["Qual é a frequência respiratória normal aproximada de um cão em repouso?","10 a 30 movimentos por minuto","60 a 80 movimentos por minuto","2 a 5 movimentos por minuto","100 a 120 movimentos por minuto"],
+["Fezes escuras, pastosas e de odor forte (melena) indicam sangramento em qual região?","Trato digestivo alto","Reto","Boca","Vesícula urinária"]]},
+{id:"cirurgia",emoji:"🔪",nome:"Cirurgia",qs:[
+["A ovariossalpingohisterectomia (OSH) remove quais estruturas?","Ovários e útero","Apenas os ovários","Apenas o útero","Vagina e vulva"],
+["A síndrome dilatação-vólvulo gástrico é mais comum em cães de qual perfil?","Grande porte e tórax profundo","Raças braquicefálicas","Filhotes de raças toy","Cães sem pelos"],
+["Qual destes fios de sutura é absorvível?","Poliglactina 910","Náilon","Polipropileno","Aço inoxidável"],
+["Qual equipamento é usado para esterilizar instrumentais cirúrgicos?","Autoclave","Micro-ondas","Estufa de cultura","Centrífuga"],
+["O que é a orquiectomia?","Remoção cirúrgica dos testículos","Remoção do útero","Remoção da vesícula biliar","Remoção das glândulas anais"],
+["Qual é o nome da cirurgia de remoção do baço?","Esplenectomia","Nefrectomia","Colecistectomia","Mastectomia"],
+["O que é uma celiotomia?","Incisão para abrir a cavidade abdominal","Abertura da cavidade torácica","Amputação de um membro","Sutura da pele"]]},
+{id:"anestesia",emoji:"💉",nome:"Anestesiologia",qs:[
+["Qual aparelho mede a saturação de oxigênio do paciente?","Oxímetro de pulso","Esfigmomanômetro","Termômetro retal","Glicosímetro"],
+["Qual destes fármacos é um opioide?","Morfina","Acepromazina","Propofol","Xilazina"],
+["Qual anestésico inalatório é muito usado na rotina veterinária?","Isoflurano","Ketamina","Lidocaína","Midazolam"],
+["Para que serve a intubação orotraqueal?","Manter a via aérea pérvia e fornecer oxigênio e anestésico","Alimentar o paciente","Medir a pressão arterial","Aspirar líquido do estômago"],
+["A acepromazina pertence a qual classe de fármacos?","Fenotiazínicos","Opioides","Benzodiazepínicos","Anti-inflamatórios"],
+["Qual fármaco é um antagonista de opioides?","Naloxona","Morfina","Fentanil","Isoflurano"],
+["Qual é o principal objetivo da medicação pré-anestésica (MPA)?","Sedar o animal e reduzir a dose dos anestésicos","Eliminar a necessidade de jejum","Substituir a anestesia geral","Esterilizar o campo cirúrgico"]]},
+{id:"diagnostico",emoji:"🔬",nome:"Diagnóstico e Exames",qs:[
+["Qual exame de imagem utiliza ondas sonoras?","Ultrassonografia","Radiografia","Tomografia","Cintilografia"],
+["Qual tipo de radiação é usada na radiografia?","Raios X (ionizante)","Ultrassom","Infravermelho","Micro-ondas"],
+["O hemograma avalia principalmente o quê?","As células do sangue","A função hepática","A função renal","Os hormônios tireoidianos"],
+["Quais exames são usados para avaliar a função renal?","Ureia e creatinina","ALT e FA","Glicose e frutosamina","T4 e TSH"],
+["Aumento de ALT geralmente sugere lesão em qual órgão?","Fígado","Rim","Pâncreas","Pulmão"],
+["Qual exame usa campo magnético e ondas de rádio para gerar imagens?","Ressonância magnética","Radiografia","Ultrassonografia","Eletrocardiograma"],
+["Qual exame é usado para detectar ovos de parasitas intestinais?","Coproparasitológico","Hemograma","Urinálise","Citologia de pele"]]},
+{id:"grandes",emoji:"🐄",nome:"Grandes Animais",qs:[
+["Qual destes animais é ruminante?","Bovino","Equino","Suíno","Canino"],
+["O que é a mastite?","Inflamação da glândula mamária","Inflamação do casco","Inflamação do rúmen","Inflamação da córnea"],
+["Qual bactéria causa a brucelose bovina?","Brucella abortus","Escherichia coli","Clostridium tetani","Salmonella typhi"],
+["Cólica equina refere-se a que quadro?","Dor abdominal","Dor nos membros","Dor de dente","Dor ocular"],
+["A febre aftosa afeta principalmente animais de qual grupo?","Biungulados (casco fendido)","Aves","Equinos","Peixes"],
+["Como se chama o estômago verdadeiro dos ruminantes?","Abomaso","Rúmen","Retículo","Omaso"],
+["Qual doença é popularmente chamada de “doença da vaca louca”?","Encefalopatia espongiforme bovina","Brucelose","Febre aftosa","Tuberculose bovina"]]},
+{id:"parasito",emoji:"🦟",nome:"Parasitologia e Zoonoses",qs:[
+["Qual inseto transmite a leishmaniose visceral?","Flebotomíneo (mosquito-palha)","Pulga","Carrapato","Barbeiro"],
+["Qual carrapato é o principal transmissor da erliquiose canina?","Rhipicephalus sanguineus","Amblyomma cajennense","Ixodes ricinus","Dermacentor variabilis"],
+["A dirofilariose, o “verme do coração”, é transmitida por quê?","Mosquitos","Carrapatos","Pulgas","Ingestão de carne crua"],
+["Qual zoonose viral é transmitida principalmente pela saliva de animais infectados?","Raiva","Toxoplasmose","Leptospirose","Giardíase"],
+["Qual é o hospedeiro definitivo do Toxoplasma gondii?","Gato","Cão","Bovino","Rato"],
+["A leptospirose é transmitida principalmente pelo contato com o quê?","Urina contaminada, em geral de roedores","Saliva de morcegos","Picada de carrapatos","Fezes de aves"],
+["Qual protozoário causa a babesiose?","Babesia","Giardia","Trichomonas","Entamoeba"]]},
+{id:"reproducao",emoji:"🍼",nome:"Reprodução Animal",qs:[
+["Qual é a duração média da gestação da cadela?","Cerca de 63 dias","Cerca de 30 dias","Cerca de 90 dias","Cerca de 120 dias"],
+["Em qual fase do ciclo estral a cadela aceita a monta?","Estro","Anestro","Diestro","Proestro"],
+["Qual é a duração média da gestação da vaca?","Cerca de 9 meses","Cerca de 4 meses","Cerca de 6 meses","Cerca de 12 meses"],
+["Qual hormônio é responsável pela ejeção do leite?","Ocitocina","Insulina","Tiroxina","Cortisol"],
+["O que é a piometra?","Acúmulo de pus no útero","Tumor de mama","Infecção na bexiga","Cisto no ovário apenas"]]},
+{id:"nutricao",emoji:"🥣",nome:"Nutrição Animal",qs:[
+["Qual destes alimentos é tóxico para cães?","Chocolate","Cenoura cozida","Arroz","Frango cozido"],
+["Qual aminoácido é essencial na dieta dos gatos?","Taurina","Glicina","Alanina","Serina"],
+["Qual nutriente fornece mais energia por grama?","Lipídios (gorduras)","Carboidratos","Proteínas","Fibras"],
+["Uvas e passas podem causar qual problema em cães?","Lesão renal aguda","Anemia por deficiência de ferro","Fratura óssea","Catarata imediata"],
+["O excesso de qual mineral na dieta de cães de raças grandes em crescimento pode causar alterações ósseas?","Cálcio","Sódio","Iodo","Zinco"]]},
+{id:"silvestres",emoji:"🦜",nome:"Animais Silvestres",qs:[
+["Qual bactéria causa a psitacose, zoonose associada a aves?","Chlamydia psittaci","Salmonella typhi","Brucella abortus","Leptospira interrogans"],
+["Como se chama a dilatação do esôfago das aves que armazena alimento?","Papo (inglúvio)","Moela","Cloaca","Proventrículo"],
+["Quais animais fazem parte do grupo dos quelônios?","Tartarugas, jabutis e cágados","Cobras e lagartos","Jacarés e crocodilos","Sapos e rãs"],
+["Qual a importância da radiação UVB para répteis?","Síntese de vitamina D3 e metabolismo do cálcio","Aumentar o apetite apenas","Evitar a troca de pele","Produzir melanina nos olhos"],
+["Qual órgão federal brasileiro é responsável pela fiscalização ambiental e da fauna silvestre?","IBAMA","ANVISA","INMET","IBGE"]]},
+{id:"dermato",emoji:"🧴",nome:"Dermatologia",qs:[
+["Qual ácaro causa a sarna sarcóptica?","Sarcoptes scabiei","Demodex canis","Otodectes cynotis","Ctenocephalides felis"],
+["Qual fungo é causa comum de dermatofitose (“tinha”) em cães e gatos?","Microsporum canis","Candida albicans","Aspergillus fumigatus","Cryptococcus neoformans"],
+["O que significa o termo alopecia?","Perda de pelos","Excesso de pelos","Coceira intensa","Descamação da pele"],
+["Qual levedura é uma causa comum de otite externa em cães?","Malassezia pachydermatis","Giardia lamblia","Escherichia coli apenas","Toxoplasma gondii"],
+["A DAPP é uma hipersensibilidade causada por qual agente?","Saliva da pulga","Pólen de gramíneas","Proteína do leite","Poeira de construção"]]}
+];
+const app=document.getElementById("app");
+const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+let area,list,i,score,locked,timerId,left,TIME=loadTime();
+function loadTime(){try{return +localStorage.getItem("vet-time")||0}catch(e){return 0}}
+function best(id){try{return +localStorage.getItem("vet-best-"+id)||0}catch(e){return 0}}
+function saveBest(id,n){try{if(n>best(id))localStorage.setItem("vet-best-"+id,n)}catch(e){}}
+function menu(){
+  app.innerHTML=`<h1>🐾 Quiz de Medicina Veterinária</h1><p>Escolha o tempo por pergunta e depois uma área.</p><div class="chips" id="chips"></div><div class="grid" id="grid"></div>`;
+  const ch=document.getElementById("chips");
+  [[0,"Sem tempo"],[10,"10 s"],[20,"20 s"],[30,"30 s"],[60,"60 s"]].forEach(([s,l])=>{
+    const c=document.createElement("button");c.className="chip"+(TIME===s?" on":"");c.textContent=l;
+    c.onclick=()=>{TIME=s;try{localStorage.setItem("vet-time",s)}catch(e){}ch.querySelectorAll(".chip").forEach(x=>x.classList.remove("on"));c.classList.add("on")};
+    ch.appendChild(c);
+  });
+  const g=document.getElementById("grid");
+  const m=document.createElement("button");m.className="cat";m.style.gridColumn="1 / -1";
+  m.innerHTML=`<span>🎲</span><b>Modo Misto</b><small>10 perguntas sorteadas de todas as áreas · Melhor: ${best("misto")}/10</small>`;
+  m.onclick=()=>play(MIX);g.appendChild(m);
+  AREAS.forEach(a=>{
+    const b=document.createElement("button");b.className="cat";
+    b.innerHTML=`<span>${a.emoji}</span><b>${a.nome}</b><small>Melhor: ${best(a.id)}/${a.qs.length}</small>`;
+    b.onclick=()=>play(a);g.appendChild(b);
+  });
+}
+// Explicações, na mesma ordem das perguntas de cada área.
+const EXPL={
+clinica:["Em cães adultos saudáveis, a temperatura retal fica entre 37,5 e 39,2 °C.","A cinomose é causada por um Morbillivirus, da família Paramyxoviridae.","O parvovírus lesa as células do intestino, causando vômito e diarreia, muitas vezes com sangue.","Esse conjunto de sinais é a apresentação clássica do diabetes mellitus.","Mucosas pálidas indicam menos hemácias ou má perfusão, como na anemia.","Em repouso, a frequência respiratória do cão costuma ficar entre 10 e 30 movimentos por minuto.","A melena é sangue digerido, geralmente vindo do estômago ou do intestino delgado."],
+cirurgia:["Na OSH, retiram-se os dois ovários e o útero.","A dilatação-vólvulo gástrico atinge sobretudo cães grandes de tórax profundo, como o Dogue Alemão.","A poliglactina 910 é sintética e absorvível; náilon, polipropileno e aço não são absorvidos.","A autoclave esteriliza os instrumentais com vapor sob pressão.","Na orquiectomia, os testículos são removidos, ou seja, é a castração do macho.","Esplenectomia é a retirada do baço; os outros termos se referem a rim, vesícula biliar e mama.","Celiotomia é a abertura cirúrgica do abdome."],
+anestesia:["O oxímetro de pulso estima a saturação de oxigênio da hemoglobina (SpO2).","A morfina é um opioide, usado principalmente para analgesia.","O isoflurano é um anestésico inalatório muito usado em cães e gatos.","O tubo traqueal garante a via aérea e permite oferecer oxigênio e anestésico inalatório.","A acepromazina é um tranquilizante da classe das fenotiazinas.","A naloxona reverte os efeitos dos opioides.","A MPA acalma o paciente e reduz a quantidade de anestésico necessária."],
+diagnostico:["A ultrassonografia forma imagens a partir de ondas sonoras de alta frequência.","A radiografia usa raios X, que são uma radiação ionizante.","O hemograma analisa hemácias, leucócitos e plaquetas.","Ureia e creatinina costumam subir quando a função renal está reduzida.","A ALT é uma enzima hepática que sobe quando há lesão de hepatócitos.","A ressonância usa campo magnético e ondas de rádio, sem radiação ionizante.","O exame de fezes identifica ovos e cistos de parasitas."],
+grandes:["Bovinos são ruminantes, com estômago de quatro compartimentos.","Mastite é a inflamação da glândula mamária, comum em vacas leiteiras.","A Brucella abortus causa brucelose, que provoca aborto em bovinos e também é zoonose.","Cólica é dor abdominal, uma das principais emergências dos equinos.","A febre aftosa atinge animais de casco fendido, como bovinos, suínos e ovinos.","O abomaso é o compartimento equivalente ao estômago dos animais monogástricos.","A EEB é uma doença priônica que afeta o sistema nervoso dos bovinos."],
+parasito:["As fêmeas de flebotomíneos transmitem a Leishmania ao picar.","O carrapato-vermelho-do-cão transmite a Ehrlichia canis.","As larvas de Dirofilaria immitis são transmitidas pela picada de mosquitos.","O vírus da raiva é transmitido principalmente pela saliva, em geral por mordidas.","O gato elimina oocistos de Toxoplasma nas fezes, completando o ciclo sexuado do parasita.","A bactéria é eliminada na urina de animais infectados, sobretudo roedores.","A Babesia infecta hemácias e é transmitida por carrapatos."],
+reproducao:["A gestação da cadela dura cerca de 63 dias a partir da ovulação.","O estro é o período de receptividade sexual, em que a fêmea aceita a monta.","A gestação bovina dura em média 283 dias, ou cerca de 9 meses.","A ocitocina provoca a contração das células que expulsam o leite.","A piometra é uma infecção do útero com acúmulo de pus, comum em cadelas não castradas."],
+nutricao:["O chocolate contém teobromina e cafeína, substâncias tóxicas para cães.","Os gatos não sintetizam taurina em quantidade suficiente; a falta causa problemas cardíacos e oculares.","As gorduras fornecem cerca de 9 kcal/g, mais que o dobro de carboidratos e proteínas.","Uvas e passas podem causar lesão renal aguda em cães, mesmo em pequenas quantidades.","O excesso de cálcio em filhotes de raças grandes pode causar doenças ósseas do desenvolvimento."],
+silvestres:["A psitacose é causada pela Chlamydia psittaci e pode passar de aves para humanos.","O papo (inglúvio) armazena o alimento antes da digestão.","Os quelônios incluem tartarugas, jabutis e cágados.","A UVB permite sintetizar vitamina D3, necessária para absorver cálcio.","O IBAMA fiscaliza e licencia atividades ambientais, incluindo a proteção da fauna silvestre."],
+dermato:["O Sarcoptes scabiei escava a pele e causa coceira intensa.","O Microsporum canis é um dos fungos que mais causam “tinha” em cães e gatos.","Alopecia é a ausência ou perda de pelos.","A Malassezia pachydermatis é uma levedura da pele e dos ouvidos que prolifera nas otites.","Na DAPP, proteínas da saliva da pulga provocam reação alérgica intensa, mesmo com poucas picadas."]
+};
+const ITEMS=AREAS.flatMap(x=>x.qs.map((q,k)=>({q,e:(EXPL[x.id]||[])[k]||"",a:x})));
+const MIX={id:"misto",emoji:"🎲",nome:"Modo Misto"};
+function play(a){area=a;list=a.id==="misto"?shuffle(ITEMS).slice(0,10):shuffle(ITEMS.filter(x=>x.a===a));i=0;score=0;show()}
+function show(){
+  locked=false;clearInterval(timerId);
+  if(TIME){left=TIME;timerId=setInterval(()=>{left--;const t=document.getElementById("tl");if(t){t.textContent=left;if(left<=5)t.style.color="var(--bad)"}if(left<=0)pick(null)},1000)}
+  const it=list[i],c=it.q;
+  app.innerHTML=`<div class="top"><span class="tag">${it.a.emoji} ${it.a.nome}</span><span>${i+1}/${list.length} · ${score} pts${TIME?` · ⏱ <b id="tl">${TIME}</b>s`:""}</span></div>
+  <div class="bar"><div style="width:${i/list.length*100}%"></div></div>
+  <p class="q"></p><div id="opts"></div><button class="btn" id="next" style="display:none"></button>`;
+  app.querySelector(".q").textContent=c[0];
+  const box=document.getElementById("opts");
+  shuffle(c.slice(1).map((t,k)=>({t,ok:k===0}))).forEach(o=>{
+    const b=document.createElement("button");b.className="opt";b.textContent=o.t;b.dataset.ok=o.ok?"1":"";
+    b.onclick=()=>pick(b);box.appendChild(b);
+  });
+}
+function pick(btn){
+  if(locked)return;locked=true;clearInterval(timerId);
+  document.querySelectorAll(".opt").forEach(b=>{b.disabled=true;if(b.dataset.ok)b.classList.add("ok")});
+  if(btn&&btn.dataset.ok)score++;else if(btn)btn.classList.add("bad");
+  const n=document.getElementById("next");
+  const ex=document.createElement("div");ex.className="exp";ex.textContent=(btn&&btn.dataset.ok?"✅ Correto! ":btn?"❌ Incorreto. ":"⏰ Tempo esgotado. ")+list[i].e;n.before(ex);
+  n.textContent=i+1<list.length?"Próxima":"Ver resultado";n.style.display="inline-block";
+  n.onclick=()=>{i++;i<list.length?show():end()};
+}
+function end(){
+  saveBest(area.id,score);
+  const p=score/list.length;
+  const msg=p===1?"Perfeito! 🏆":p>=.6?"Muito bem! 👏":"Continue estudando! 💪";
+  app.innerHTML=`<h1>${msg}</h1><p>${area.emoji} ${area.nome}</p><div class="score">${score}/${list.length}</div><p>Melhor pontuação: ${best(area.id)}/${list.length}</p>
+  <button class="btn" id="again">Jogar de novo</button><button class="btn alt" id="menu">Escolher outra área</button>`;
+  document.getElementById("again").onclick=()=>play(area);
+  document.getElementById("menu").onclick=menu;
+}
+menu();
+</script>
+</body>
+</html>
