@@ -407,6 +407,13 @@ function best(id,level=selectedDifficulty){try{return +localStorage.getItem("vet
 function saveBest(id,n){try{if(n>best(id))localStorage.setItem("vet-best-v3-"+id+"-"+selectedDifficulty,n)}catch(e){}}
 function readStats(){try{return JSON.parse(localStorage.getItem("vet-stats-v2"))||{answered:0,correct:0,attempts:0,lastScore:null,lastTotal:0,lastArea:""}}catch(e){return {answered:0,correct:0,attempts:0,lastScore:null,lastTotal:0,lastArea:""}}}
 function saveAnswer(isCorrect){const st=readStats();st.answered++;if(isCorrect)st.correct++;try{localStorage.setItem("vet-stats-v2",JSON.stringify(st))}catch(e){}}
+function recordDetailedAnswer(it,isCorrect){
+  try{
+    const log=JSON.parse(localStorage.getItem("vet-answer-log-v1"))||[];
+    log.push({id:it.id,area:it.category.id,areaName:it.category.nome,level:it.level||selectedDifficulty,correct:!!isCorrect,at:Date.now()});
+    localStorage.setItem("vet-answer-log-v1",JSON.stringify(log.slice(-2000)));
+  }catch(e){}
+}
 function saveAttempt(){const st=readStats();st.attempts++;st.lastScore=score;st.lastTotal=list.length;st.lastArea=area.nome;st.lastAt=Date.now();try{localStorage.setItem("vet-stats-v2",JSON.stringify(st))}catch(e){}}
 function rate(st){return st.answered?Math.round(st.correct/st.answered*100):0}
 // Ranking pessoal: acertos por área e por nível + histórico das últimas 100 rodadas (salvos neste navegador).
@@ -422,8 +429,9 @@ function refreshBestLabels(){
 }
 function menu(){
   const st=readStats();
-  app.innerHTML=`<header class="site-header"><div class="brand-mark">VQ</div><div class="brand-copy"><strong>VetQuiz</strong><small>MEDICINA VETERINÁRIA · KINGDOM STUDIOS</small></div><span class="header-pill">CONHECIMENTO EM MOVIMENTO</span></header><section class="hero"><div class="hero-copy"><div class="tag">VETQUIZ / CENTRAL DE APRENDIZAGEM</div><h1>A vida como propósito. <em>A ciência como caminho.</em></h1><p>Um espaço para estudar Medicina Veterinária com método, curiosidade e propósito. Explore as disciplinas, pratique e acompanhe sua evolução.</p><div class="hero-meta"><span>10 áreas de estudo</span><span>450 questões</span><span>Progresso salvo no dispositivo</span></div></div><div class="hero-art" aria-label="Fotografia de um veterinário examinando um cão em uma clínica"><div class="specimen-ring"></div><div class="specimen-symbol">✳</div><div class="specimen-label">CUIDADO ANIMAL<br><b>CIÊNCIA EM PRÁTICA</b></div><div class="hero-art-bottom"><span>ESTUDO CONTÍNUO</span><span>01 / 10</span></div></div></section><div class="difficulty-wrap"><div class="difficulty-title">Escolha o nível de dificuldade</div><p class="difficulty-note">Vale para todas as áreas e para o Modo Misto.</p><div class="difficulties" id="difficulties"></div></div><div class="section-heading"><div><span class="eyebrow">SEU PROGRESSO</span><h2>Seu desempenho</h2></div><button class="btn" id="rankBtn" style="margin:0">🏆 Meu ranking</button></div><div class="stats"><div class="stat"><strong>${st.answered}</strong><span>Questões respondidas</span></div><div class="stat"><strong>${rate(st)}%</strong><span>Taxa de acertos</span></div><div class="stat"><strong>${st.attempts}</strong><span>Simulados concluídos</span></div><div class="stat"><strong>${st.lastScore===null?"—":st.lastScore+"/"+st.lastTotal}</strong><span>Último resultado</span></div></div><section class="study-panel"><div class="section-heading compact"><div><span class="eyebrow">PERSONALIZE SUA SESSÃO</span><h2>Como você quer estudar?</h2></div></div><div class="chips" id="chips"></div></section><section class="areas-section"><div class="section-heading compact"><div><span class="eyebrow">EXPLORE O CONTEÚDO</span><h2>Escolha uma área de estudo</h2></div><span class="area-count">10 CATEGORIAS</span></div><div class="grid" id="grid"></div></section><footer class="site-footer"><span>VetQuiz <b>•</b> Aprendizado contínuo em Medicina Veterinária</span><div class="studio-credit"><span class="studio-crown" aria-hidden="true">♛</span><span><small class="studio-by">Um projeto desenvolvido por</small><strong>KINGDOM STUDIOS</strong><small>Beyond Imagination</small></span></div><span>Foto: Tima Miroshnichenko / Pexels — “A Veterinarian Sitting Beside a Black Dog Lying on the Table” · Feito para estudar com propósito 🐾</span></footer>`;
+  app.innerHTML=`<header class="site-header"><div class="brand-mark">VQ</div><div class="brand-copy"><strong>VetQuiz</strong><small>MEDICINA VETERINÁRIA · KINGDOM STUDIOS</small></div><span class="header-pill">CONHECIMENTO EM MOVIMENTO</span></header><section class="hero"><div class="hero-copy"><div class="tag">VETQUIZ / CENTRAL DE APRENDIZAGEM</div><h1>A vida como propósito. <em>A ciência como caminho.</em></h1><p>Um espaço para estudar Medicina Veterinária com método, curiosidade e propósito. Explore as disciplinas, pratique e acompanhe sua evolução.</p><div class="hero-meta"><span>10 áreas de estudo</span><span>450 questões</span><span>Progresso salvo no dispositivo</span></div></div><div class="hero-art" aria-label="Fotografia de um veterinário examinando um cão em uma clínica"><div class="specimen-ring"></div><div class="specimen-symbol">✳</div><div class="specimen-label">CUIDADO ANIMAL<br><b>CIÊNCIA EM PRÁTICA</b></div><div class="hero-art-bottom"><span>ESTUDO CONTÍNUO</span><span>01 / 10</span></div></div></section><div class="difficulty-wrap"><div class="difficulty-title">Escolha o nível de dificuldade</div><p class="difficulty-note">Vale para todas as áreas e para o Modo Misto.</p><div class="difficulties" id="difficulties"></div></div><div class="section-heading"><div><span class="eyebrow">SEU PROGRESSO</span><h2>Seu desempenho</h2></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn alt" id="performanceBtn" style="margin:0">📊 Painel completo</button><button class="btn" id="rankBtn" style="margin:0">🏆 Meu ranking</button></div></div><div class="stats"><div class="stat"><strong>${st.answered}</strong><span>Questões respondidas</span></div><div class="stat"><strong>${rate(st)}%</strong><span>Taxa de acertos</span></div><div class="stat"><strong>${st.attempts}</strong><span>Simulados concluídos</span></div><div class="stat"><strong>${st.lastScore===null?"—":st.lastScore+"/"+st.lastTotal}</strong><span>Último resultado</span></div></div><section class="study-panel"><div class="section-heading compact"><div><span class="eyebrow">PERSONALIZE SUA SESSÃO</span><h2>Como você quer estudar?</h2></div></div><div class="chips" id="chips"></div></section><section class="areas-section"><div class="section-heading compact"><div><span class="eyebrow">EXPLORE O CONTEÚDO</span><h2>Escolha uma área de estudo</h2></div><span class="area-count">10 CATEGORIAS</span></div><div class="grid" id="grid"></div></section><footer class="site-footer"><span>VetQuiz <b>•</b> Aprendizado contínuo em Medicina Veterinária</span><div class="studio-credit"><span class="studio-crown" aria-hidden="true">♛</span><span><small class="studio-by">Um projeto desenvolvido por</small><strong>KINGDOM STUDIOS</strong><small>Beyond Imagination</small></span></div><span>Foto: Tima Miroshnichenko / Pexels — “A Veterinarian Sitting Beside a Black Dog Lying on the Table” · Feito para estudar com propósito 🐾</span></footer>`;
   document.getElementById("rankBtn").onclick=()=>{rankView="all";ranking()};
+  document.getElementById("performanceBtn").onclick=performancePanel;
   const ds=document.getElementById("difficulties");
   [["all","Todas", "45 por tema"],["easy","Fácil","15 por tema"],["medium","Intermediário","15 por tema"],["hard","Difícil","15 por tema"]].forEach(([id,label,sub])=>{
     const b=document.createElement("button");b.className="difficulty"+(selectedDifficulty===id?" on":"");
@@ -627,7 +635,7 @@ function pick(btn){
   document.querySelectorAll(".opt").forEach(b=>{b.disabled=true;if(b.dataset.ok)b.classList.add("ok")});
   const isCorrect=!!(btn&&btn.dataset.ok);
   if(isCorrect)score++;else if(btn)btn.classList.add("bad");
-  saveAnswer(isCorrect);recordAreaAnswer(list[i],isCorrect);
+  saveAnswer(isCorrect);recordAreaAnswer(list[i],isCorrect);recordDetailedAnswer(list[i],isCorrect);
   const n=document.getElementById("next");
   const ex=document.createElement("div");ex.className="exp";ex.textContent=(btn&&btn.dataset.ok?"✅ Correto! ":btn?"❌ Incorreto. ":"⏰ Tempo esgotado. ")+list[i].explanation;n.before(ex);
   n.textContent=i+1<list.length?"Próxima":"Ver resultado";n.style.display="inline-block";
@@ -645,6 +653,35 @@ function end(){
   document.getElementById("rk").onclick=()=>{rankView=area.id==="misto"?"all":area.id;ranking()};
 }
 // Tela de ranking pessoal: por área (todas juntas) ou por nível dentro de uma área escolhida.
+// Painel completo de desempenho; o registro detalhado começa nesta versão.
+function performancePanel(){
+  const st=readStats(), areas=readAreaStats(), hist=readHistory();
+  const pct=(c,n)=>n?Math.round(c/n*100):0;
+  const log=(()=>{try{return JSON.parse(localStorage.getItem("vet-answer-log-v1"))||[]}catch(e){return []}})();
+  const total=st.answered||0, correct=st.correct||0, wrong=Math.max(0,total-correct);
+  const areaRows=AREAS.map(a=>{
+    const x=Object.values(areas[a.id]||{}).reduce((r,v)=>({n:r.n+(v.n||0),c:r.c+(v.c||0)}),{n:0,c:0});
+    return {...a,...x,p:pct(x.c,x.n)};
+  });
+  const levelRows=[["easy","Fácil"],["medium","Intermediário"],["hard","Difícil"]].map(([id,label])=>{
+    const x=Object.values(areas).reduce((r,a)=>{const v=a[id]||{};return {n:r.n+(v.n||0),c:r.c+(v.c||0)}},{n:0,c:0});
+    return {label,...x,p:pct(x.c,x.n)};
+  });
+  const bars=areaRows.map(a=>`<div class="rk"><div class="rk-main"><strong>${a.emoji} ${a.nome}</strong><div class="bar"><div style="width:${a.p}%"></div></div><small>${a.n?`${a.c} acertos em ${a.n} respostas`:"Ainda sem respostas registradas"}</small></div><em>${a.n?a.p+"%":"—"}</em></div>`).join("");
+  const levels=levelRows.map(a=>`<div class="rk"><div class="rk-main"><strong>${a.label}</strong><div class="bar"><div style="width:${a.p}%"></div></div><small>${a.n?`${a.c} acertos em ${a.n} respostas`:"Ainda sem respostas registradas"}</small></div><em>${a.n?a.p+"%":"—"}</em></div>`).join("");
+  const recent=[...hist].sort((a,b)=>(b.d||0)-(a.d||0)).slice(0,10);
+  const nm=id=>{const a=AREAS.find(x=>x.id===id);return id==="misto"?"🎲 Modo Misto":a?`${a.emoji} ${a.nome}`:id};
+  const recentHtml=recent.length?recent.map(h=>`<div class="rk"><div class="rk-main"><strong>${nm(h.a)}</strong><small>${LEVELS[h.l]||"Dificuldade não informada"} · ${new Date(h.d).toLocaleString("pt-BR")}</small></div><em>${h.s}/${h.t} · ${pct(h.s,h.t)}%</em></div>`).join(""):"<p>Conclua uma rodada para começar seu histórico.</p>";
+  app.innerHTML=`<div class="section-heading"><div><span class="eyebrow">SEU PROGRESSO</span><h2>📊 Meu Desempenho</h2></div></div>
+  <p>Visão geral do seu percurso de aprendizagem neste navegador.</p>
+  <div class="stats"><div class="stat"><strong>${total}</strong><span>Questões respondidas</span></div><div class="stat"><strong>${pct(correct,total)}%</strong><span>Taxa de acertos</span></div><div class="stat"><strong>${correct}</strong><span>Acertos</span></div><div class="stat"><strong>${wrong}</strong><span>Erros / tempo esgotado</span></div><div class="stat"><strong>${st.attempts||0}</strong><span>Rodadas concluídas</span></div><div class="stat"><strong>${log.length}</strong><span>Respostas detalhadas desde a V1</span></div></div>
+  <div class="rk-sub">Desempenho por disciplina</div>${bars}
+  <div class="rk-sub">Desempenho por dificuldade</div>${levels}
+  <div class="rk-sub">Rodadas recentes</div>${recentHtml}
+  <p style="font-size:.78rem;color:var(--muted);margin-top:18px">Os totais e o histórico anteriores foram preservados. O registro detalhado de cada resposta começa nesta versão e fica salvo neste navegador. Rodadas antigas não possuem detalhes individuais retroativos.</p>
+  <button class="btn" id="performanceBack">Voltar ao início</button>`;
+  document.getElementById("performanceBack").onclick=menu;
+}
 function ranking(){
   const st=readAreaStats(),hist=readHistory();
   const pct=(c,n)=>n?Math.round(c/n*100):0;
